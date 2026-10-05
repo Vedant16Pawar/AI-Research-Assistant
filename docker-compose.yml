@@ -1,0 +1,68 @@
+services:
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:17
+    container_name: ai-research-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_research_assistant
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Qdrant vector database
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # Ollama local LLM
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai-research-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  # FastAPI backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai-research-backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/ai_research_assistant
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: 6333
+      OLLAMA_BASE_URL: http://ollama:11434
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+      - qdrant
+      - ollama
+    volumes:
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+
+  # React frontend served by Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ai-research-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  ollama_data:
+  backend_uploads:

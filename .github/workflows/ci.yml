@@ -1,0 +1,100 @@
+# Name of the workflow shown in GitHub Actions.
+name: CI
+
+# Run the workflow when code is pushed to main
+# or when a pull request targets main.
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+# Jobs are the individual tasks performed by GitHub Actions.
+jobs:
+
+  # ==================================================
+  # Backend tests
+  # ==================================================
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Download the repository onto the GitHub runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install the Python version used by our Docker backend.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Install backend dependencies and the testing tool.
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      # Run the complete backend test suite.
+      - name: Run backend tests
+        working-directory: backend
+        run: python -m pytest -v
+
+  # ==================================================
+  # Frontend build
+  # ==================================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Download the repository onto the GitHub runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Node.js for the React/Vite frontend.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Install the exact frontend dependencies from package-lock.json.
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Create the production frontend build.
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  # ==================================================
+  # Docker image builds
+  # ==================================================
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Download the repository onto the GitHub runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Build the backend Docker image.
+      - name: Build backend Docker image
+        run: docker build -t ai-research-backend ./backend
+
+      # Build the frontend Docker image.
+      - name: Build frontend Docker image
+        run: docker build -t ai-research-frontend ./frontend

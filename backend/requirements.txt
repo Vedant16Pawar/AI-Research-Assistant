@@ -1,0 +1,35 @@
+# Web API
+fastapi==0.139.0
+uvicorn==0.51.0
+
+# Configuration and validation
+pydantic==2.13.4
+pydantic-settings==2.14.2
+python-dotenv==1.2.2
+
+# Database
+SQLAlchemy==2.0.52
+psycopg[binary]==3.3.5
+alembic==1.20.0
+
+# Vector database
+qdrant-client==1.19.0
+
+# Retrieval
+rank-bm25==0.2.2
+
+# Embeddings and reranking
+sentence-transformers==5.6.1
+transformers==5.14.1
+
+# Document processing
+pymupdf==1.28.0
+python-docx==1.2.0
+python-multipart==0.0.32
+
+# LangChain
+langchain-core==1.5.3
+langchain-text-splitters==1.1.2
+
+# Local LLM
+ollama==0.6.2
